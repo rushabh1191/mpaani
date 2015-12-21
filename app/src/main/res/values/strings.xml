@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">mpaani</string>
+    <string name="title_activity_mpaani">MPaaniActivity</string>
 </resources>
