@@ -1,15 +1,23 @@
 package com.mpaani.mpaani;
 
+import android.content.Intent;
+import android.location.Address;
+import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.ResultReceiver;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
-import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.google.android.gms.location.LocationServices;
+import com.mpaani.helpers.PreferenceHelper;
+import com.mpaani.task.GetAddressFromLocation;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -25,10 +33,15 @@ public class LoginActivity extends MPaaniActivity {
     @Bind(R.id.password)
     EditText mPasswordView;
 
+    private AddressListener mResultReceiver;
+
+    PreferenceHelper preferenceHelper;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
+
+        preferenceHelper=new PreferenceHelper(this);
 
 
         ButterKnife.bind(this);
@@ -55,6 +68,23 @@ public class LoginActivity extends MPaaniActivity {
 
     }
 
+    @Override
+    public void onConnected(Bundle bundle) {
+        super.onConnected(bundle);
+
+    }
+
+    void detectLocationAndGetInfo(){
+        Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                googleApiClient);
+
+        if (mLastLocation != null) {
+            Intent intent=new Intent(this, GetAddressFromLocation.class);
+            intent.putExtra(GetAddressFromLocation.LOCATION_DATA,mLastLocation);
+            intent.putExtra(GetAddressFromLocation.RECEIVER_INFO,new AddressListener(new Handler()));
+            startService(intent);
+        }
+    }
 
     public void attemptLogin() {
 
@@ -91,9 +121,41 @@ public class LoginActivity extends MPaaniActivity {
         } else {
 
 
+            detectLocationAndGetInfo();
+
+
         }
     }
 
+    class AddressListener extends ResultReceiver{
+
+        /**
+         * Create a new ResultReceive to receive results.  Your
+         * {@link #onReceiveResult} method will be called from the thread running
+         * <var>handler</var> if given, or from an arbitrary thread if null.
+         *
+         * @param handler
+         */
+        public AddressListener(Handler handler) {
+            super(handler);
+        }
+
+        @Override
+        protected void onReceiveResult(int resultCode, Bundle resultData) {
+            super.onReceiveResult(resultCode, resultData);
+
+            Address address=resultData.getParcelable("address");
+
+//            PreferenceHelper preferenceHelper=new PreferenceHelper(this);
+
+            preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN,true);
+            preferenceHelper.saveString(PreferenceHelper.ADDRESS_OF_LOGIN, address.toString());
+
+            startActivity(new Intent(LoginActivity.this, WelcomeActivity.class));
+            finish();
+
+        }
+    }
     private boolean isEmailValid(String email) {
 
         return email.contains("@");
@@ -102,7 +164,7 @@ public class LoginActivity extends MPaaniActivity {
 
 
     private boolean isPasswordValid(String password) {
-        //TODO: Replace this with your own logic
+
         return password.length() > 4;
     }
 

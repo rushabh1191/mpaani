@@ -9,11 +9,13 @@ import android.content.SharedPreferences;
 public class PreferenceHelper {
 
 
+    private static final String USER_NAME = "user_name";
     private SharedPreferences preference;
 
     private final String PREFERENCE_NAME="com.mpaani.app";
 
-
+    public static final String IS_USER_LOGGED_IN="is_user_logged_in";
+    public static final String ADDRESS_OF_LOGIN ="login_address";
     public PreferenceHelper(Context context){
         try {
             preference=context.getSharedPreferences(PREFERENCE_NAME, Context.MODE_PRIVATE);
@@ -22,10 +24,20 @@ public class PreferenceHelper {
         {
 
         }
-
-
     }
 
+    public boolean isUserLoggedIn(){
+        return  preference.getBoolean(IS_USER_LOGGED_IN,false);
+    }
+
+    public String addressOfLogin(){
+        return  preference.getString(ADDRESS_OF_LOGIN, "Mumbai");
+    }
+
+    public String userName(){
+
+        return preference.getString(USER_NAME,"'");
+    }
 
 
     public void removeSession()
