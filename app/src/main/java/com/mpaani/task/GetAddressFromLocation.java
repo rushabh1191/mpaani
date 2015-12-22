@@ -43,7 +43,7 @@ public class GetAddressFromLocation extends IntentService {
                 addressList=geocoder.getFromLocation(location.getLatitude(),location.getLongitude(),1);
 
                 Bundle bundle=new Bundle();
-                bundle.putParcelable("address",addressList.get(0));
+//                bundle.putParcelable("address",addressList.get(0));
                 resultReceiver.send(1,bundle);
             } catch (IOException e) {
                 e.printStackTrace();

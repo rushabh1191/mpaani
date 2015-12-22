@@ -10,6 +10,7 @@ public class PreferenceHelper {
 
 
     private static final String USER_NAME = "user_name";
+    public static final String DISTANCE = "distance";
     private SharedPreferences preference;
 
     private final String PREFERENCE_NAME="com.mpaani.app";

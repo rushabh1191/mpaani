@@ -3,11 +3,8 @@
     package="com.mpaani.mpaani">
 
     <!-- To auto-complete the email text field in the login form with the user's emails -->
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.READ_PROFILE" />
-    <uses-permission android:name="android.permission.READ_CONTACTS" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -17,13 +14,7 @@
         <activity
             android:name=".LoginActivity"
             android:label="@string/app_name"
-            android:windowSoftInputMode="adjustResize|stateVisible">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
+            android:windowSoftInputMode="adjustResize|stateVisible" />
         <activity
             android:name=".MPaaniActivity"
             android:label="@string/title_activity_mpaani"
@@ -33,7 +24,27 @@
             android:name="com.mpaani.task.GetAddressFromLocation"
             android:exported="false" />
 
-        <activity android:name=".WelcomeActivity"></activity>
+        <activity android:name=".WelcomeActivity" />
+        <activity
+            android:name=".SplashScreenActivity"
+            android:label="@string/title_activity_splash_screen"
+            android:theme="@style/AppTheme">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name="com.mpaani.task.MPaaniLocationService"
+            android:enabled="true"
+            android:exported="true" />
+
+        <receiver
+            android:name="com.mpaani.task.LogoutBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true"></receiver>
     </application>
 
 </manifest>

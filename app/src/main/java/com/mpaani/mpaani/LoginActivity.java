@@ -1,5 +1,7 @@
 package com.mpaani.mpaani;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Location;
@@ -18,6 +20,10 @@ import android.widget.TextView;
 import com.google.android.gms.location.LocationServices;
 import com.mpaani.helpers.PreferenceHelper;
 import com.mpaani.task.GetAddressFromLocation;
+import com.mpaani.task.LogoutBroadcastReceiver;
+import com.mpaani.task.MPaaniLocationService;
+
+import java.util.Calendar;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -148,14 +154,44 @@ public class LoginActivity extends MPaaniActivity {
 
 //            PreferenceHelper preferenceHelper=new PreferenceHelper(this);
 
-            preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN,true);
-            preferenceHelper.saveString(PreferenceHelper.ADDRESS_OF_LOGIN, address.toString());
+            preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN, true);
+//            preferenceHelper.saveString(PreferenceHelper.ADDRESS_OF_LOGIN, address.toString());
 
             startActivity(new Intent(LoginActivity.this, WelcomeActivity.class));
+
+
             finish();
+
+            startLocationTrackingService();
+            startLogoutService();
+
 
         }
     }
+
+
+    void startLocationTrackingService(){
+        Intent intent=new Intent(this, MPaaniLocationService.class);
+        startService(intent);
+    }
+    void startLogoutService(){
+
+        Calendar calendaram = Calendar.getInstance();
+
+        calendaram.set(Calendar.HOUR_OF_DAY, 7);
+        calendaram.set(Calendar.MINUTE, 0);
+        calendaram.set(Calendar.SECOND, 0);
+        calendaram.set(Calendar.AM_PM, Calendar.PM);
+
+
+
+        Intent myIntent = new Intent(this, LogoutBroadcastReceiver.class);
+        PendingIntent pendingIntentam = PendingIntent.getBroadcast(this, 0, myIntent, 0);
+        AlarmManager alarmManageram = (AlarmManager)getSystemService(ALARM_SERVICE);
+        alarmManageram.set(AlarmManager.RTC, calendaram.getTimeInMillis(), pendingIntentam);
+
+    }
+
     private boolean isEmailValid(String email) {
 
         return email.contains("@");

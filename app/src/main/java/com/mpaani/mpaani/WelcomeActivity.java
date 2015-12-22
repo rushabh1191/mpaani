@@ -1,20 +1,53 @@
 package com.mpaani.mpaani;
 
-import android.support.v7.app.AppCompatActivity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.location.Location;
 import android.os.Bundle;
 import android.text.Html;
 import android.widget.TextView;
 
+import com.mpaani.helpers.Logger;
 import com.mpaani.helpers.PreferenceHelper;
+import com.mpaani.task.LogoutBroadcastReceiver;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 
-public class WelcomeActivity extends AppCompatActivity {
+public class WelcomeActivity extends MPaaniActivity {
 
 
     @Bind(R.id.tv_welcome_message)
-    TextView tvmessage;
+    TextView tvMessage;
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        registerReceiver(logoutResponder,new IntentFilter(LogoutBroadcastReceiver.APP_LOGGED_OUT));
+    }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        unregisterReceiver(logoutResponder);
+    }
+
+    BroadcastReceiver logoutResponder=new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+
+            logoutFromTheApp();
+
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -29,8 +62,30 @@ public class WelcomeActivity extends AppCompatActivity {
         String text="Welcome "+userName+"</br> <b> You have logged in from </b></br>"
                 +address;
 
-        tvmessage.setText(Html.fromHtml(text));
+        tvMessage.setText(Html.fromHtml(text));
+
+    }
 
 
+    @OnClick(R.id.btnLogout)
+    void logoutFromTheApp(){
+
+        PreferenceHelper preferenceHelper=new PreferenceHelper(this);
+        preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN,false);
+        preferenceHelper.removeSession();
+        finish();;
+        Intent intent=new Intent(this,LoginActivity.class);
+        startActivity(intent);
+
+
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        super.onLocationChanged(location);
+
+        Logger.logData("beta","Location update received");
+
+        tvMessage.setText(location.getLatitude()+" "+location.getLongitude());
     }
 }
