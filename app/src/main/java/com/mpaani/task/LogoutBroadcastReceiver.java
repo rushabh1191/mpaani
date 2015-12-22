@@ -21,9 +21,9 @@ public class LogoutBroadcastReceiver extends BroadcastReceiver {
         // an Intent broadcast.
         PreferenceHelper preferenceHelper=new PreferenceHelper(context);
         preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN,false);
-        context.stopService(new Intent(context,MPaaniLocationService.class));
-        Logger.logData("beta", "Logging out user");
-
+        context.stopService(new Intent(context, MPaaniLocationService.class));
         context.sendBroadcast(new Intent(APP_LOGGED_OUT));
+
+        Logger.logData("beta","Lgogout out");
     }
 }

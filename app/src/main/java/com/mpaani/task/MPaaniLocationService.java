@@ -11,6 +11,7 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.mpaani.helpers.Logger;
 import com.mpaani.helpers.PreferenceHelper;
 
 public class MPaaniLocationService extends Service implements   GoogleApiClient.ConnectionCallbacks,
@@ -80,6 +81,8 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
     @Override
     public void onConnected(Bundle bundle) {
 
+        Logger.logData("beta","Api clinet connect");
+
         if(!isRequestingUpdates){
             startLocationUpdates();
         }
@@ -105,6 +108,8 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
     @Override
     public void onLocationChanged(Location location) {
 
+
+        Logger.logData("beta","Locaion changed");
         if(lastLocation!=null){
             float distance=location.distanceTo(lastLocation);
 
@@ -115,6 +120,8 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
             if(distance<minimumDistanceThreshold){
                 //tell server that user is not moving much
             }
+
+            Logger.logData("beta","Distance "+distance);
 
         }
         lastLocation=location;
