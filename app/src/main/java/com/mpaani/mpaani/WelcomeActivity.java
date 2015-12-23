@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.mpaani.helpers.Logger;
 import com.mpaani.helpers.PreferenceHelper;
 import com.mpaani.task.LogoutBroadcastReceiver;
+import com.mpaani.task.MPaaniLocationService;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -29,6 +30,7 @@ public class WelcomeActivity extends MPaaniActivity {
         super.onStart();
 
         registerReceiver(logoutResponder,new IntentFilter(LogoutBroadcastReceiver.APP_LOGGED_OUT));
+
     }
 
 
@@ -48,6 +50,10 @@ public class WelcomeActivity extends MPaaniActivity {
         }
     };
 
+    void startLocationService(){
+        startService(new Intent(this, MPaaniLocationService.class));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +70,8 @@ public class WelcomeActivity extends MPaaniActivity {
 
         tvMessage.setText(Html.fromHtml(text));
 
+        startLocationService();
+
     }
 
 
@@ -71,9 +79,11 @@ public class WelcomeActivity extends MPaaniActivity {
     void logoutFromTheApp(){
 
         PreferenceHelper preferenceHelper=new PreferenceHelper(this);
-        preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN,false);
+        preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN, false);
         preferenceHelper.removeSession();
-        finish();;
+        finish();
+        Intent in=new Intent(this,MPaaniLocationService.class);
+        stopService(in);
         Intent intent=new Intent(this,LoginActivity.class);
         startActivity(intent);
 

@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -20,7 +21,7 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
     protected GoogleApiClient googleApiClient;
     protected LocationRequest locationRequester;
 
-    final int INTERVAL = 2000;
+    final int INTERVAL = 10;
     final int FASTEST_INTERVAL = INTERVAL/2;
 
     final int LOCATION_TIMEOUT=15;
@@ -51,6 +52,9 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
         locationRequester.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         isRequestingUpdates = false;
+
+        googleApiClient.connect();
+        Logger.logData("beta","location service");
     }
 
     @Override
@@ -101,7 +105,7 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
     public void onDestroy() {
         super.onDestroy();
         if(isRequestingUpdates){
-            stopLocationUpdates();
+            googleApiClient.disconnect();
         }
     }
 
@@ -109,7 +113,8 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
     public void onLocationChanged(Location location) {
 
 
-        Logger.logData("beta","Locaion changed");
+
+        Logger.logData("beta","Location changed in service "+lastLocation+" "+location);
         if(lastLocation!=null){
             float distance=location.distanceTo(lastLocation);
 
@@ -125,6 +130,8 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
 
         }
         lastLocation=location;
+
+        Logger.logData("beta","Last location"+lastLocation);
 
     }
 

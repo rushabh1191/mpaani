@@ -161,19 +161,12 @@ public class LoginActivity extends MPaaniActivity {
 
 
             finish();
-
-            startLocationTrackingService();
-            startLogoutService();
+//            startLogoutService();
 
 
         }
     }
 
-
-    void startLocationTrackingService(){
-        Intent intent=new Intent(this, MPaaniLocationService.class);
-        startService(intent);
-    }
     void startLogoutService(){
 
         Calendar calendaram = Calendar.getInstance();
