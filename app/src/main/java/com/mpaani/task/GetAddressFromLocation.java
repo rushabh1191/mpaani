@@ -37,6 +37,9 @@ public class GetAddressFromLocation extends IntentService {
         Location location=intent.getExtras().getParcelable(LOCATION_DATA);
             resultReceiver=intent.getExtras().getParcelable(RECEIVER_INFO);
         List<Address> addressList=null;
+
+        Logger.logData("beta","Getting address");
+
         if (intent != null) {
 
             try {
@@ -44,7 +47,8 @@ public class GetAddressFromLocation extends IntentService {
 
                 Bundle bundle=new Bundle();
                 bundle.putParcelable("address",addressList.get(0));
-                resultReceiver.send(1,bundle);
+                resultReceiver.send(1, bundle);
+                Logger.logData("beta","Got address");
             } catch (IOException e) {
                 e.printStackTrace();
             }

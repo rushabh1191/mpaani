@@ -36,6 +36,20 @@ public class Utility {
     }
 
 
+    public static void cancelAll(Context context) {
+        NotificationManager notificationManager = (NotificationManager)
+                context.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancelAll();
+
+    }
+
+    public static void cancel(Context context, int notiId) {
+        NotificationManager notificationManager = (NotificationManager)
+                context.getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.cancel(notiId);
+
+    }
+
     public static void showNotification(String message, String title, Context context,int id) {
 
 

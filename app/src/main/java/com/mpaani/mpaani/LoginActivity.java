@@ -180,6 +180,7 @@ public class LoginActivity extends MPaaniActivity {
 //            startActivity(new Intent(LoginActivity.this, WelcomeActivity.class));
                 progressBar=ProgressDialog.show(this,"","Fetching location information");
                 detectLocationAndGetInfo();
+                startLogoutService();
             }
             else {
                 buildAlertMessageNoGps();

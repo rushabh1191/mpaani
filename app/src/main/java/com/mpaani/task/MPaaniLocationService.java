@@ -72,7 +72,10 @@ public class MPaaniLocationService extends Service implements GoogleApiClient.Co
         public void onReceive(Context context, Intent intent) {
 
             if (!LoginActivity.isGPSEnabled(MPaaniLocationService.this)) {
-                Utility.showNotification("Please enable GPS", "Error", MPaaniLocationService.this,983);
+                Utility.showNotification("Please enable GPS", "Error", MPaaniLocationService.this, 983);
+            } else {
+
+                Utility.cancel(context, 9803);
             }
         }
     };
@@ -144,28 +147,26 @@ public class MPaaniLocationService extends Service implements GoogleApiClient.Co
 
             preferenceHelper.saveFloat(PreferenceHelper.DISTANCE, travelledDistance);
 
-            if(Utility.isNetworkAvailable(this)) {
-                if (distance < minimumDistanceThresholdInKm & Utility.isNetworkAvailable(this)) {
-                    if (distance < minimumDistanceThresholdInKm) {
-                        Utility.showNotification("User is not travelling ", "MPaani Alert", this);
-                    } else {
-                        Utility.showNotification("Sending Info Distance :" + getFormattedKM(travelledDistance/ 1000 )+ " KM", "MPaani Information", this);
-                    }
+            if (Utility.isNetworkAvailable(this)) {
+                if (distance < minimumDistanceThresholdInKm) {
+                    Utility.showNotification("User is not travelling ", "MPaani Alert", this);
+                } else {
+                    Utility.showNotification("Sending Info Distance :" + getFormattedKM(travelledDistance / 1000) + " KM", "MPaani Information", this);
                 }
-            }else {
-                Utility.showNotification("No internet,App send when internet will be available", "No Network", this,10);
+            } else {
+                Utility.showNotification("No internet,App send when internet will be available", "No Network", this, 10);
 
                 DatabaseManager databaseManager = DatabaseManager.getDatabaseManger(this);
                 databaseManager.addLocationInformation(location);
                 DatabaseManager.releaseDatabase();
             }
 
-
         }
         lastLocation = location;
-
-
     }
+
+
+
 
     public String getFormattedKM(float number) {
         return String.format("%.2f", number);
