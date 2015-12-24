@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">mpaani</string>
     <string name="title_activity_mpaani">MPaaniActivity</string>
-    <string name="title_activity_splash_screen">SplashScreenActivity</string>
+    <string name="title_activity_splash_screen">MPaani</string>
 </resources>

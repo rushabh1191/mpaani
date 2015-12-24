@@ -2,6 +2,7 @@ package com.mpaani.helpers;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.location.Address;
 
 /**
  * Created by rushabh on 5/9/14.
@@ -9,8 +10,12 @@ import android.content.SharedPreferences;
 public class PreferenceHelper {
 
 
-    private static final String USER_NAME = "user_name";
+    public static final String USER_NAME = "user_name";
     public static final String DISTANCE = "distance";
+
+    public static final String ADDRESS_LINE1="address_line1";
+    public static final String ADDRESS_LINE2="address_line2";
+
     private SharedPreferences preference;
 
     private final String PREFERENCE_NAME="com.mpaani.app";
@@ -115,6 +120,17 @@ public class PreferenceHelper {
 
     public boolean contains(String key){
         return preference.contains(key);
+    }
+
+    public void saveAddress(Address address){
+            saveString(ADDRESS_LINE1,address.getAddressLine(0));
+            saveString(ADDRESS_LINE2,address.getAddressLine(1));
+    }
+
+    public String getAddress(){
+        String line1=getString(ADDRESS_LINE1);
+        String line2=getString(ADDRESS_LINE2);
+        return line1+"\n"+line2;
     }
 
 

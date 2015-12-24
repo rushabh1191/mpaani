@@ -7,12 +7,17 @@ import android.content.IntentFilter;
 import android.location.Location;
 import android.os.Bundle;
 import android.text.Html;
+import android.view.View;
 import android.widget.TextView;
 
 import com.mpaani.helpers.Logger;
 import com.mpaani.helpers.PreferenceHelper;
 import com.mpaani.task.LogoutBroadcastReceiver;
 import com.mpaani.task.MPaaniLocationService;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -24,6 +29,8 @@ public class WelcomeActivity extends MPaaniActivity {
     @Bind(R.id.tv_welcome_message)
     TextView tvMessage;
 
+    @Bind(R.id.tv_time)
+    TextView tvTime;
 
     @Override
     protected void onStart() {
@@ -64,9 +71,25 @@ public class WelcomeActivity extends MPaaniActivity {
         String userName=preferenceHelper.userName();
         ButterKnife.bind(this);
 
+        Bundle bundle=getIntent().getExtras();
+        tvTime.setVisibility(View.GONE);
+        if(bundle!=null) {
+
+            if (bundle.containsKey("is_coming_from_login")) {
+                Date date = new Date();
+
+                tvTime.setVisibility(View.VISIBLE);
+                SimpleDateFormat sdf = new SimpleDateFormat("dd/mm/yyyy HH:mm");
+                String time = sdf.format(date); // formats to 09/23/2009 13:53:28.238
+
+                tvTime.setText("You have looged in at "+time);
+
+            }
+        }
+
 
         String text="Welcome "+userName+"</br> <b> You have logged in from </b></br>"
-                +address;
+                +preferenceHelper.getAddress().replace("\n","</br>");
 
         tvMessage.setText(Html.fromHtml(text));
 
@@ -94,8 +117,6 @@ public class WelcomeActivity extends MPaaniActivity {
     public void onLocationChanged(Location location) {
         super.onLocationChanged(location);
 
-        Logger.logData("beta","Location update received");
 
-        tvMessage.setText(location.getLatitude()+" "+location.getLongitude());
     }
 }

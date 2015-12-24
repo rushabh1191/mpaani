@@ -1,8 +1,12 @@
 package com.mpaani.task;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -12,25 +16,29 @@ import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.mpaani.helpers.DatabaseManager;
 import com.mpaani.helpers.Logger;
 import com.mpaani.helpers.PreferenceHelper;
+import com.mpaani.helpers.Utility;
+import com.mpaani.mpaani.LoginActivity;
 
-public class MPaaniLocationService extends Service implements   GoogleApiClient.ConnectionCallbacks,
+public class MPaaniLocationService extends Service implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     protected GoogleApiClient googleApiClient;
     protected LocationRequest locationRequester;
 
-    final int INTERVAL = 10;
-    final int FASTEST_INTERVAL = INTERVAL/2;
+    final int INTERVAL = 15;
+    final int FASTEST_INTERVAL = INTERVAL / 2;
 
-    final int LOCATION_TIMEOUT=15;
+    final int LOCATION_TIMEOUT = 15;
 
-    boolean isRequestingUpdates=false;
+    boolean isRequestingUpdates = false;
 
-    int minimumDistanceThreshold=100;
+    int minimumDistanceThresholdInKm = 1;
 
     Location lastLocation;
+
     public MPaaniLocationService() {
     }
 
@@ -46,16 +54,28 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
                     .build();
         }
 
+        registerReceiver
+                (gpsReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
         locationRequester = new LocationRequest();
         locationRequester.setInterval(INTERVAL * 1000);
-        locationRequester.setMaxWaitTime(FASTEST_INTERVAL * 1000);
+        locationRequester.setFastestInterval(FASTEST_INTERVAL * 1000);
         locationRequester.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         isRequestingUpdates = false;
 
         googleApiClient.connect();
-        Logger.logData("beta","location service");
+        Logger.logData("beta", "location service");
     }
+
+    BroadcastReceiver gpsReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+
+            if (!LoginActivity.isGPSEnabled(MPaaniLocationService.this)) {
+                Utility.showNotification("Please enable GPS", "Error", MPaaniLocationService.this,983);
+            }
+        }
+    };
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
@@ -81,13 +101,10 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
     }
 
 
-
     @Override
     public void onConnected(Bundle bundle) {
 
-        Logger.logData("beta","Api clinet connect");
-
-        if(!isRequestingUpdates){
+        if (!isRequestingUpdates) {
             startLocationUpdates();
         }
     }
@@ -95,7 +112,7 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
     @Override
     public void onConnectionSuspended(int i) {
 
-        if(isRequestingUpdates){
+        if (isRequestingUpdates) {
             stopLocationUpdates();
         }
 
@@ -104,34 +121,54 @@ public class MPaaniLocationService extends Service implements   GoogleApiClient.
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(isRequestingUpdates){
+        if (isRequestingUpdates) {
             googleApiClient.disconnect();
         }
+
+        unregisterReceiver(gpsReceiver);
     }
 
     @Override
     public void onLocationChanged(Location location) {
 
 
+        if (lastLocation != null) {
 
-        Logger.logData("beta","Location changed in service "+lastLocation+" "+location);
-        if(lastLocation!=null){
-            float distance=location.distanceTo(lastLocation);
+            float distance = location.distanceTo(lastLocation);
 
-            PreferenceHelper preferenceHelper=new PreferenceHelper(this);
-            float travelledDistance=preferenceHelper.getFloat(PreferenceHelper.DISTANCE,0);
-            preferenceHelper.saveFloat(PreferenceHelper.DISTANCE,distance+travelledDistance);
+            PreferenceHelper preferenceHelper = new PreferenceHelper(this);
+            float travelledDistance = preferenceHelper.getFloat(PreferenceHelper.DISTANCE, 0);
 
-            if(distance<minimumDistanceThreshold){
-                //tell server that user is not moving much
+
+            travelledDistance += distance;
+
+            preferenceHelper.saveFloat(PreferenceHelper.DISTANCE, travelledDistance);
+
+            if(Utility.isNetworkAvailable(this)) {
+                if (distance < minimumDistanceThresholdInKm & Utility.isNetworkAvailable(this)) {
+                    if (distance < minimumDistanceThresholdInKm) {
+                        Utility.showNotification("User is not travelling ", "MPaani Alert", this);
+                    } else {
+                        Utility.showNotification("Sending Info Distance :" + getFormattedKM(travelledDistance/ 1000 )+ " KM", "MPaani Information", this);
+                    }
+                }
+            }else {
+                Utility.showNotification("No internet,App send when internet will be available", "No Network", this,10);
+
+                DatabaseManager databaseManager = DatabaseManager.getDatabaseManger(this);
+                databaseManager.addLocationInformation(location);
+                DatabaseManager.releaseDatabase();
             }
 
-            Logger.logData("beta","Distance "+distance);
 
         }
-        lastLocation=location;
+        lastLocation = location;
 
-        Logger.logData("beta","Last location"+lastLocation);
+
+    }
+
+    public String getFormattedKM(float number) {
+        return String.format("%.2f", number);
 
     }
 

@@ -2,12 +2,17 @@ package com.mpaani.mpaani;
 
 import android.app.AlarmManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Address;
 import android.location.Location;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.ResultReceiver;
+import android.support.v7.app.AlertDialog;
 import android.text.TextUtils;
 import android.view.KeyEvent;
 import android.view.View;
@@ -15,8 +20,10 @@ import android.view.View.OnClickListener;
 import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.google.android.gms.auth.api.proxy.ProxyGrpcRequest;
 import com.google.android.gms.location.LocationServices;
 import com.mpaani.helpers.PreferenceHelper;
 import com.mpaani.task.GetAddressFromLocation;
@@ -39,15 +46,20 @@ public class LoginActivity extends MPaaniActivity {
     @Bind(R.id.password)
     EditText mPasswordView;
 
+
+    ProgressDialog progressBar;
+
+
     private AddressListener mResultReceiver;
 
     PreferenceHelper preferenceHelper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        preferenceHelper=new PreferenceHelper(this);
+        preferenceHelper = new PreferenceHelper(this);
 
 
         ButterKnife.bind(this);
@@ -72,6 +84,7 @@ public class LoginActivity extends MPaaniActivity {
             }
         });
 
+        checkLocationService();
     }
 
     @Override
@@ -80,16 +93,49 @@ public class LoginActivity extends MPaaniActivity {
 
     }
 
-    void detectLocationAndGetInfo(){
+    void detectLocationAndGetInfo() {
         Location mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
                 googleApiClient);
 
         if (mLastLocation != null) {
-            Intent intent=new Intent(this, GetAddressFromLocation.class);
-            intent.putExtra(GetAddressFromLocation.LOCATION_DATA,mLastLocation);
-            intent.putExtra(GetAddressFromLocation.RECEIVER_INFO,new AddressListener(new Handler()));
+            Intent intent = new Intent(this, GetAddressFromLocation.class);
+            intent.putExtra(GetAddressFromLocation.LOCATION_DATA, mLastLocation);
+            intent.putExtra(GetAddressFromLocation.RECEIVER_INFO, new AddressListener(new Handler()));
             startService(intent);
         }
+    }
+
+
+    void checkLocationService() {
+
+        if(!isGPSEnabled(this)){
+            buildAlertMessageNoGps();
+        }
+    }
+
+    public static boolean isGPSEnabled(Context context){
+        final LocationManager manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+
+        boolean isgpsEnabled= manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        return isgpsEnabled;
+
+    }
+    private void buildAlertMessageNoGps() {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setMessage("Your GPS seems to be disabled, You will have to enable it for continue using this app?")
+                .setCancelable(false)
+                .setPositiveButton("Enable", new DialogInterface.OnClickListener() {
+                    public void onClick(@SuppressWarnings("unused") final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                    }
+                })
+                .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    public void onClick(final DialogInterface dialog, @SuppressWarnings("unused") final int id) {
+                        dialog.cancel();
+                    }
+                });
+        final AlertDialog alert = builder.create();
+        alert.show();
     }
 
     public void attemptLogin() {
@@ -127,13 +173,23 @@ public class LoginActivity extends MPaaniActivity {
         } else {
 
 
-            detectLocationAndGetInfo();
+            if(isGPSEnabled(this)) {
+                preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN, true);
+//            preferenceHelper.saveString(PreferenceHelper.ADDRESS_OF_LOGIN, address.toString());
+
+//            startActivity(new Intent(LoginActivity.this, WelcomeActivity.class));
+                progressBar=ProgressDialog.show(this,"","Fetching location information");
+                detectLocationAndGetInfo();
+            }
+            else {
+                buildAlertMessageNoGps();
+            }
 
 
         }
     }
 
-    class AddressListener extends ResultReceiver{
+    class AddressListener extends ResultReceiver {
 
         /**
          * Create a new ResultReceive to receive results.  Your
@@ -150,24 +206,28 @@ public class LoginActivity extends MPaaniActivity {
         protected void onReceiveResult(int resultCode, Bundle resultData) {
             super.onReceiveResult(resultCode, resultData);
 
-            Address address=resultData.getParcelable("address");
+            Address address = resultData.getParcelable("address");
 
-//            PreferenceHelper preferenceHelper=new PreferenceHelper(this);
+
 
             preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN, true);
-//            preferenceHelper.saveString(PreferenceHelper.ADDRESS_OF_LOGIN, address.toString());
+            preferenceHelper.saveString(PreferenceHelper.ADDRESS_OF_LOGIN, address.toString());
+            preferenceHelper.saveAddress(address);
+            progressBar.dismiss();
 
-            startActivity(new Intent(LoginActivity.this, WelcomeActivity.class));
+            Intent intent=new Intent(LoginActivity.this,WelcomeActivity.class);
+            intent.putExtra("is_coming_from_login",true);
+            startActivity(intent);
 
 
             finish();
-//            startLogoutService();
+
 
 
         }
     }
 
-    void startLogoutService(){
+    void startLogoutService() {
 
         Calendar calendaram = Calendar.getInstance();
 
@@ -177,10 +237,9 @@ public class LoginActivity extends MPaaniActivity {
         calendaram.set(Calendar.AM_PM, Calendar.PM);
 
 
-
         Intent myIntent = new Intent(this, LogoutBroadcastReceiver.class);
         PendingIntent pendingIntentam = PendingIntent.getBroadcast(this, 0, myIntent, 0);
-        AlarmManager alarmManageram = (AlarmManager)getSystemService(ALARM_SERVICE);
+        AlarmManager alarmManageram = (AlarmManager) getSystemService(ALARM_SERVICE);
         alarmManageram.set(AlarmManager.RTC, calendaram.getTimeInMillis(), pendingIntentam);
 
     }
@@ -189,7 +248,6 @@ public class LoginActivity extends MPaaniActivity {
 
         return email.contains("@");
     }
-
 
 
     private boolean isPasswordValid(String password) {

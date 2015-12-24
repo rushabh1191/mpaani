@@ -44,7 +44,17 @@
         <receiver
             android:name="com.mpaani.task.LogoutBroadcastReceiver"
             android:enabled="true"
-            android:exported="true"></receiver>
+            android:exported="true" />
+
+        <receiver
+            android:name="com.mpaani.helpers.InternetConnectivity"
+            android:exported="false">
+
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+
+        </receiver>
     </application>
 
 </manifest>
