@@ -25,6 +25,8 @@ import android.widget.TextView;
 
 import com.google.android.gms.auth.api.proxy.ProxyGrpcRequest;
 import com.google.android.gms.location.LocationServices;
+import com.mpaani.helpers.ConfirmationWindow;
+import com.mpaani.helpers.Logger;
 import com.mpaani.helpers.PreferenceHelper;
 import com.mpaani.task.GetAddressFromLocation;
 import com.mpaani.task.LogoutBroadcastReceiver;
@@ -108,18 +110,21 @@ public class LoginActivity extends MPaaniActivity {
 
     void checkLocationService() {
 
-        if(!isGPSEnabled(this)){
+        if (!isGPSEnabled(this)) {
             buildAlertMessageNoGps();
         }
     }
 
-    public static boolean isGPSEnabled(Context context){
+    public static boolean isGPSEnabled(Context context) {
         final LocationManager manager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
-        boolean isgpsEnabled= manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean isgpsEnabled = manager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+
+        Logger.logData("beta", "ps " + isgpsEnabled);
         return isgpsEnabled;
 
     }
+
     private void buildAlertMessageNoGps() {
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage("Your GPS seems to be disabled, You will have to enable it for continue using this app?")
@@ -162,30 +167,30 @@ public class LoginActivity extends MPaaniActivity {
             mEmailView.setError(getString(R.string.error_field_required));
             focusView = mEmailView;
             cancel = true;
-        } else if (!isEmailValid(email)) {
-            mEmailView.setError(getString(R.string.error_invalid_email));
-            focusView = mEmailView;
-            cancel = true;
         }
 
         if (cancel) {
             focusView.requestFocus();
         } else {
 
+            Calendar calendar = Calendar.getInstance();
+            int day = calendar.get(Calendar.DAY_OF_WEEK);
 
-            if(isGPSEnabled(this)) {
-                preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN, true);
-//            preferenceHelper.saveString(PreferenceHelper.ADDRESS_OF_LOGIN, address.toString());
 
-//            startActivity(new Intent(LoginActivity.this, WelcomeActivity.class));
-                progressBar=ProgressDialog.show(this,"","Fetching location information");
-                detectLocationAndGetInfo();
-                startLogoutService();
+            if (day == Calendar.SUNDAY) {
+
+                new ConfirmationWindow(this, "Hey This is sunday", "Hey! This is sunday.Enjoy Your Day", "OK :)", "");
+            } else {
+                if (isGPSEnabled(this)) {
+                    preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN, true);
+                    progressBar = ProgressDialog.show(this, "", "Fetching location information");
+                    detectLocationAndGetInfo();
+                    startLogoutService();
+                } else {
+                    buildAlertMessageNoGps();
+                }
+
             }
-            else {
-                buildAlertMessageNoGps();
-            }
-
 
         }
     }
@@ -210,19 +215,18 @@ public class LoginActivity extends MPaaniActivity {
             Address address = resultData.getParcelable("address");
 
 
-
             preferenceHelper.saveBoolean(PreferenceHelper.IS_USER_LOGGED_IN, true);
             preferenceHelper.saveString(PreferenceHelper.ADDRESS_OF_LOGIN, address.toString());
+            preferenceHelper.saveString(PreferenceHelper.USER_NAME,mEmailView.getText().toString());
             preferenceHelper.saveAddress(address);
             progressBar.dismiss();
 
-            Intent intent=new Intent(LoginActivity.this,WelcomeActivity.class);
-            intent.putExtra("is_coming_from_login",true);
+            Intent intent = new Intent(LoginActivity.this, WelcomeActivity.class);
+            intent.putExtra("is_coming_from_login", true);
             startActivity(intent);
 
 
             finish();
-
 
 
         }

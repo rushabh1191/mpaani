@@ -88,8 +88,8 @@ public class WelcomeActivity extends MPaaniActivity {
         }
 
 
-        String text="Welcome "+userName+"</br> <b> You have logged in from </b></br>"
-                +preferenceHelper.getAddress().replace("\n","</br>");
+        String text="Welcome <h3>"+userName+"</h3><br/> <b> You have logged in from </b><br/>"
+                +preferenceHelper.getAddress().replace("\n","<br/>");
 
         tvMessage.setText(Html.fromHtml(text));
 

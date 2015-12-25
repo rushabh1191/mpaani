@@ -9,7 +9,6 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
@@ -28,10 +27,9 @@ public class MPaaniLocationService extends Service implements GoogleApiClient.Co
     protected GoogleApiClient googleApiClient;
     protected LocationRequest locationRequester;
 
-    final int INTERVAL = 15;
-    final int FASTEST_INTERVAL = INTERVAL / 2;
+    final int INTERVAL_IN_MINUTE = 2;
+    final int FASTEST_INTERVAL = INTERVAL_IN_MINUTE / 2;
 
-    final int LOCATION_TIMEOUT = 15;
 
     boolean isRequestingUpdates = false;
 
@@ -57,8 +55,8 @@ public class MPaaniLocationService extends Service implements GoogleApiClient.Co
         registerReceiver
                 (gpsReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));
         locationRequester = new LocationRequest();
-        locationRequester.setInterval(INTERVAL * 1000);
-        locationRequester.setFastestInterval(FASTEST_INTERVAL * 1000);
+        locationRequester.setInterval(INTERVAL_IN_MINUTE *60* 1000);
+        locationRequester.setFastestInterval(FASTEST_INTERVAL *60* 1000);
         locationRequester.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         isRequestingUpdates = false;
